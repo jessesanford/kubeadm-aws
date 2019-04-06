@@ -75,15 +75,14 @@ networking:
   podSubnet: 10.244.0.0/16
 EOF
 
-# Check if there is an etcd backup on the s3 bucket and restore from it if there is
-if [ $(aws s3 ls s3://${s3bucket}/etcd-backups/ | wc -l) -ne 0 ]; then
-  echo "Found existing etcd backup. Restoring from it instead of starting from fresh."
-  LATEST_BACKUP=$(aws s3api list-objects --no-paginate --bucket ${s3bucket} --prefix etcd-backups --query 'reverse(sort_by(Contents,&LastModified))[0].Key' --output text)
-  echo "Found etcd snapshot: $LATEST_BACKUP"
+echo "Checking s3://${s3bucket}/etcd-snapshot.db.xz"
+aws s3 cp s3://${s3bucket}/etcd-snapshot.db.xz etcd-snapshot.db.xz || echo "Snapshot not found."
+
+if [ -f etcd-snapshot.db.xz ]; then
+  echo "Found etcd snapshot"
+  unxz etcd-snapshot.db.xz
 
   echo "Restoring etcd snapshot"
-  aws s3 cp s3://${s3bucket}/$LATEST_BACKUP etcd-snapshot.db.xz
-  unxz etcd-snapshot.db.xz
   ETCDCTL_API=3 etcdctl snapshot restore etcd-snapshot.db --data-dir /var/lib/etcd
 
   echo "Downloading Kubernetes pki data"
@@ -139,12 +138,12 @@ fi
 # Set up backups if they have been enabled
 # This section is indented with tabs to make the EOF heredocs work
 if [[ "${backupenabled}" == "1" ]]; then
-	# Back up etcd to s3 every 15 minutes. The lifecycle policy in terraform will keep 7 days to save us doing that logic here.
+	# Back up etcd to s3 every 15 minutes. A lifecycle rule will delete previous versions after 7 days.
 	cat <<-EOF > /usr/local/bin/backup-etcd.sh
 	#!/bin/bash
 	ETCDCTL_API=3 /usr/local/bin/etcdctl --cacert='/etc/kubernetes/pki/etcd/ca.crt' --cert='/etc/kubernetes/pki/etcd/peer.crt' --key='/etc/kubernetes/pki/etcd/peer.key' snapshot save etcd-snapshot.db
 	xz -f -9 etcd-snapshot.db
-	aws s3 cp --metadata instanceid=$INSTANCE_ID etcd-snapshot.db.xz s3://${s3bucket}/etcd-backups/etcd-snapshot-\$(date -Iseconds)-$INSTANCE_ID.db.xz
+	aws s3 cp --metadata instanceid=$INSTANCE_ID etcd-snapshot.db.xz s3://${s3bucket}/etcd-snapshot.db.xz
 	EOF
 
 	echo "${backupcron} root bash /usr/local/bin/backup-etcd.sh" > /etc/cron.d/backup-etcd

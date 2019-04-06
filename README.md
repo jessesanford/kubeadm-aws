@@ -42,6 +42,7 @@ Optional Variables:
 * `cluster-name` - Used for naming the created AWS resources (k8s by default)
 * `backup-enabled` - Set to "0" to disable the automatic etcd backups (1 by default)
 * `backup-cron-expression` - A cron expression to use for the automatic etcd backups (`*/15 * * * *` by default)
+* `versioned-bucket` - Set to "false" to only keep the most recent etcd backup (true by default)
 * `external-dns-enabled` - Set to "0" to disable ExternalDNS (1 by default) - Existing Route 53 Domain required
 * `nginx-ingress-enabled` - Set to "1" to enable Nginx Ingress (0 by default)
 * `nginx-ingress-domain` - The DNS name to map to Nginx Ingress using External DNS ("" by default)
