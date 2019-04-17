@@ -40,7 +40,7 @@ provider "random" {
 }
 
 resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = "10.100.0.0/16"
   enable_dns_hostnames = true
 
   tags {
@@ -81,7 +81,7 @@ resource "aws_route_table_association" "public" {
 
 resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.main.id}"
-  cidr_block = "10.0.100.0/24"
+  cidr_block = "10.100.100.0/24"
   availability_zone = "${var.region}${var.az}"
   map_public_ip_on_launch = true
 
@@ -272,7 +272,7 @@ data "template_file" "worker-userdata" {
 
   vars {
     k8stoken = "${local.k8stoken}"
-    masterIP = "10.0.100.4"
+    masterIP = "10.100.100.4"
     k8sversion = "${var.kubernetes-version}"
   }
 }
@@ -459,7 +459,7 @@ resource "aws_spot_instance_request" "master" {
   spot_price = "${var.master-spot-price}"
   valid_until = "9999-12-25T12:00:00Z"
   wait_for_fulfillment = true
-  private_ip = "10.0.100.4"
+  private_ip = "10.100.100.4"
 
   depends_on = ["aws_internet_gateway.gw"]
 
