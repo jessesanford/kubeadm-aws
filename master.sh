@@ -54,7 +54,7 @@ mkdir /mnt/kubelet
 echo 'KUBELET_EXTRA_ARGS="--root-dir=/mnt/kubelet --cloud-provider=aws"' > /etc/default/kubelet
 
 cat >init-config.yaml <<EOF
-apiVersion: kubeadm.k8s.io/v1alpha3
+apiVersion: kubeadm.k8s.io/v1beta2
 kind: InitConfiguration
 bootstrapTokens:
 - groups:
@@ -65,12 +65,14 @@ nodeRegistration:
   name: "$(hostname -f)"
   taints: []
 ---
-apiVersion: kubeadm.k8s.io/v1alpha3
+apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
-apiServerExtraArgs:
-  cloud-provider: aws
-controllerManagerExtraArgs:
-  cloud-provider: aws
+apiServer:
+  extraArgs:
+    cloud-provider: aws
+controllerManager:
+  extraArgs:
+    cloud-provider: aws
 networking:
   podSubnet: 10.244.0.0/16
 EOF
@@ -125,7 +127,7 @@ if [ -f /tmp/fresh-cluster ]; then
 
   # Install cert-manager
   if [[ "${certmanagerenabled}" == "1" ]]; then
-    sleep 60 # Give Tiller a minute to start up
+    sleep 120 # Give Tiller a minute to start up
     su -c 'helm install --name cert-manager --namespace cert-manager --version 0.5.2 stable/cert-manager --set createCustomResource=false && helm upgrade --install --namespace cert-manager --version 0.5.2 cert-manager stable/cert-manager --set createCustomResource=true' ubuntu
   fi
 

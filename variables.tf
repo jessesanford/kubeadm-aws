@@ -127,12 +127,12 @@ variable "external-dns-enabled" {
 }
 
 variable "nginx-ingress-enabled" {
-  default = "0"
+  default = "1"
   description = "Whether or not to enable nginx ingress. (1 for enabled, 0 for disabled)"
 }
 
 variable "nginx-ingress-domain" {
-  default = ""
+  default = "k8s.savethatname.com"
   description = "The DNS name to map to Nginx Ingress (using External DNS)"
 }
 
@@ -142,7 +142,7 @@ variable "cert-manager-enabled" {
 }
 
 variable "cert-manager-email" {
-  default = ""
+  default = "admin@savethatname.com"
   description = "The email address to use for Let's Encrypt certificate requests"
 }
 
